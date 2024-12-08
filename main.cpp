@@ -4,20 +4,48 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+
+class Plank
+{
+   private:
+      size_t   _length;
+   public:
+      Plank(){_length = 0;}
+      Plank(size_t x) {_length = x;}
+
+      size_t   getLength() const
+      {
+         return (this->_length);
+      }
+
+      bool operator<(const Plank &rhs) const
+      {
+         return (this->_length < rhs._length);
+      }
+
+};
+
+std::ostream   &operator<<(std::ostream &o, const Plank &inst)
+{
+   o << inst.getLength();
+   return(o);
+}
+
+int   serial_int(const int& x)
+{
+   return (x);
+}
+
 int main()
 {
-   std::vector<int> w = {23, 53, 5, 22, 3, 100, 66, 13, 11, 47, 0, 79};
+  std::vector<int> w = {45, 3, 64, 101, 32, 9, 13, 415, 25, 0,44};
+  Heap<int, int>  h = Heap(w.begin(), w.end(), &serial_int);
 
-   Heap<int>   h(w.begin(), w.end());
    h.printHeap();
-   h.insert(2);
-   h.printHeap();
-   std::cout << h.peekHead() << " " << h[7] << std::endl;
-   int   x = h.popHead();
-   h.printHeap();
-   std::cout << "x = " << x << std::endl;
-   int y = 500;
-   h.modify(5, y);
-   h.printHeap();
-
+   h.printIndexes();
+   size_t   idx;
+   if (h.getIndex(64, idx))
+   {
+      std::cout << "h contains 64 at index: " << idx; 
+   }
 }
