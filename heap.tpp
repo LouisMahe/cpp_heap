@@ -2,16 +2,15 @@
 #include "iostream"
 
 template <class T, class U>
-Heap<T, U>::Heap(Serializer pt) : _v(), _size(0), _serialize(pt), _indexes()
+Heap<T, U>::Heap(Serializer pt, compFunc t_comp) : _v(), _size(0), _cp(t_comp),_serialize(pt), _indexes()
 {}
 
 template <class T, class U>
 template <typename InputIterator, typename>
-Heap<T, U>::Heap(InputIterator first, InputIterator last, Serializer pt) : _v(), _size(), _serialize(pt), _indexes()
+Heap<T, U>::Heap(InputIterator first, InputIterator last, Serializer pt, compFunc t_comp) : _v(), _size(), _cp(t_comp),_serialize(pt), _indexes()
 {
     _v.insert(_v.begin(), first, last);
     _size = _v.size();
-    std::cout << this->_size << std::endl;
     this->_makeHeap();
     for (size_t i = 0; i < this->_size; i++)
     {
@@ -20,12 +19,13 @@ Heap<T, U>::Heap(InputIterator first, InputIterator last, Serializer pt) : _v(),
 }
 
 template<class T, class U>
-Heap<T, U>::Heap(const Heap<T, U> &other): _v(other._v), _size(other._size), _serialize(other._serialize), _indexes(other._indexes)
+Heap<T, U>::Heap(const Heap<T, U> &other): _v(other._v), _size(other._size), _cp(other._cp),_serialize(other._serialize), _indexes(other._indexes)
 {}
 
 template<class T, class U>
 Heap<T, U>::~Heap()
 {}
+
 
 template<class T, class U>
 Heap<T, U> &Heap<T, U>::operator=(Heap<T, U> const &rhs)
@@ -61,10 +61,11 @@ void    Heap<T, U>::_heapify_up(size_t idx)
 {
     while(idx > 0)
     {
-        if (this->_v[idx] < this->_v[(idx-1)/2])
+        if (_cp(this->_v[idx], this->_v[(idx-1)/2]))
         {
             _indexes[_serialize(_v[idx])] = (idx - 1)/2;
-            _indexes[_serialize[_v[(idx-1)/2]]] = idx;
+            _indexes[_serialize(_v[(idx-1)/2])] = idx;
+            std::cout << "swaping\n";
             std::swap(this->_v[idx], this->_v[(idx-1)/2]);
             idx = (idx-1)/2;
         }
@@ -80,14 +81,14 @@ size_t  Heap<T, U>::_minChild(size_t idx)
 {
     size_t  left = 2*idx + 1;
     size_t  right = 2*idx + 2;
-    
+
     if (left > this->_size-1)
         return (idx);
     else if (right > this->_size-1)
         return (left);
     else
     {
-        return ((this->_v[left] > this->_v[right]) ? right : left);
+        return (_cp(this->_v[left], this->_v[right]) ? left : right);
     }
 }
 
@@ -95,11 +96,11 @@ template<class T, class U>
 void    Heap<T, U>::_heapify_down(size_t idx)
 {
     size_t  minc = this->_minChild(idx);
-    if (this->_v[idx] > this->_v[minc])
+    if (_cp(this->_v[minc], this->_v[idx]))
     {
         _indexes[_serialize(_v[idx])] = minc;
         _indexes[_serialize(_v[minc])] = idx;
-        
+
         std::swap(this->_v[idx], this->_v[minc]);
         this->_heapify_down(minc);
     }
@@ -158,15 +159,15 @@ T   Heap<T, U>::popHead()
     }
 }
 
-//  Should the map erase the old value and create a new one ?
-// if the serialisation of T is not changed it is not necessary
 template<class T, class U>
-void    Heap<T, U>::modify(size_t idx, T &new_value)
+T    Heap<T, U>::modify(size_t idx, T &new_value)
 {
-    
-    
-    if (this->_v[idx] > new_value)
+    T   res = _v[idx];
+    _indexes.erase(_serialize(res));
+    _indexes[_serialize(new_value)] = idx;
+    if (_cp(new_value, this->_v[idx]))
     {
+        std::cout << "heap up\n";
         this->_v[idx] = new_value;
         this->_heapify_up(idx);
     }
@@ -174,6 +175,7 @@ void    Heap<T, U>::modify(size_t idx, T &new_value)
         this->_v[idx] = new_value;
         this->_heapify_down(idx);
     }
+    return (res);
 }
 
 template<class T, class U>
@@ -189,7 +191,7 @@ void    Heap<T, U>::printIndexes() const
 template<class T, class U>
 bool    Heap<T, U>::getIndex(const U &serial_value, size_t &idx)
 {
-    
+
     if (auto search = _indexes.find(serial_value); search != _indexes.end())
     {
         idx = search->second;
@@ -197,4 +199,13 @@ bool    Heap<T, U>::getIndex(const U &serial_value, size_t &idx)
     }
     return (false);
 
+}
+
+template<class T, class U>
+void    Heap<T, U>::deleteVec(freeT cleanVec)
+{
+    for (auto it:this->_v)
+    {
+        cleanVec(it);
+    }
 }
