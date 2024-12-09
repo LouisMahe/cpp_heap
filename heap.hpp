@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <map>
 
 
 
@@ -20,7 +21,7 @@ class Heap
 
         using Serializer = U (*)(const T&);
         Serializer  _serialize;
-        std::unordered_map<U, size_t> _indexes;
+        std::map<U, size_t> _indexes;
 
         void    _heapify_up(size_t idx);
         void    _heapify_down(size_t idx);
@@ -38,7 +39,8 @@ class Heap
         Heap(const Heap &other);
         ~Heap();
         Heap<T, U> &operator=(Heap<T, U> const &rhs);
-        T    modify(size_t idx, T &new_value);
+        using changeValue = void (*)(T old_value, T new_value);
+        void    modify(size_t idx, T &new_value, changeValue swapper);
 
         size_t  getSize() const;
         const T       &operator[](size_t idx) const;
@@ -57,3 +59,6 @@ class Heap
 };
 
 #endif
+
+
+// TODO modify modify

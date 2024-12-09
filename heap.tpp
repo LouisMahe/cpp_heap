@@ -2,12 +2,12 @@
 #include "iostream"
 
 template <class T, class U>
-Heap<T, U>::Heap(Serializer pt, compFunc t_comp) : _v(), _size(0), _cp(t_comp),_serialize(pt), _indexes()
+Heap<T, U>::Heap(Serializer pt, compFunc t_comp) : _v(), _size(0), _cp(t_comp),_serialize(pt)
 {}
 
 template <class T, class U>
 template <typename InputIterator, typename>
-Heap<T, U>::Heap(InputIterator first, InputIterator last, Serializer pt, compFunc t_comp) : _v(), _size(), _cp(t_comp),_serialize(pt), _indexes()
+Heap<T, U>::Heap(InputIterator first, InputIterator last, Serializer pt, compFunc t_comp) : _v(), _size(), _cp(t_comp),_serialize(pt)
 {
     _v.insert(_v.begin(), first, last);
     _size = _v.size();
@@ -65,7 +65,6 @@ void    Heap<T, U>::_heapify_up(size_t idx)
         {
             _indexes[_serialize(_v[idx])] = (idx - 1)/2;
             _indexes[_serialize(_v[(idx-1)/2])] = idx;
-            std::cout << "swaping\n";
             std::swap(this->_v[idx], this->_v[(idx-1)/2]);
             idx = (idx-1)/2;
         }
@@ -133,7 +132,7 @@ void    Heap<T, U>::insert(const T &new_value)
 template<class T, class U>
 const T &Heap<T, U>::peekHead() const
 {
-   return (this->_v[0]);
+return (this->_v[0]);
 }
 
 template<class T, class U>
@@ -160,22 +159,17 @@ T   Heap<T, U>::popHead()
 }
 
 template<class T, class U>
-T    Heap<T, U>::modify(size_t idx, T &new_value)
+void    Heap<T, U>::modify(size_t idx, T &new_value, changeValue swapper)
 {
-    T   res = _v[idx];
-    _indexes.erase(_serialize(res));
-    _indexes[_serialize(new_value)] = idx;
-    if (_cp(new_value, this->_v[idx]))
+    bool heapify = _cp(new_value, _v[idx]);
+    swapper(_v[idx], new_value);
+    if (heapify)
     {
-        std::cout << "heap up\n";
-        this->_v[idx] = new_value;
         this->_heapify_up(idx);
     }
     else{
-        this->_v[idx] = new_value;
         this->_heapify_down(idx);
     }
-    return (res);
 }
 
 template<class T, class U>
@@ -208,4 +202,11 @@ void    Heap<T, U>::deleteVec(freeT cleanVec)
     {
         cleanVec(it);
     }
+}
+
+
+template<class T, class U>
+size_t  Heap<T, U>::getSize() const
+{
+    return (this->_size);
 }
